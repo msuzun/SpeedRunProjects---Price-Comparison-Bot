@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
+import { isValidUrlPattern } from '@/lib/utils'
 
 type UrlInputFormProps = {
   onSubmit: (urls: { url1: string; url2: string }) => void
@@ -14,6 +15,32 @@ export default function UrlInputForm({
   const [url1, setUrl1] = useState('')
   const [url2, setUrl2] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [url1Error, setUrl1Error] = useState<string | null>(null)
+  const [url2Error, setUrl2Error] = useState<string | null>(null)
+
+  const validateUrl1 = (value: string) => {
+    if (!value.trim()) {
+      setUrl1Error(null)
+      return
+    }
+    if (!isValidUrlPattern(value)) {
+      setUrl1Error('Please enter a valid URL starting with http:// or https://')
+    } else {
+      setUrl1Error(null)
+    }
+  }
+
+  const validateUrl2 = (value: string) => {
+    if (!value.trim()) {
+      setUrl2Error(null)
+      return
+    }
+    if (!isValidUrlPattern(value)) {
+      setUrl2Error('Please enter a valid URL starting with http:// or https://')
+    } else {
+      setUrl2Error(null)
+    }
+  }
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -25,11 +52,25 @@ export default function UrlInputForm({
       return
     }
 
-    // Basic URL validation
+    // Validate URL patterns
+    if (!isValidUrlPattern(url1)) {
+      setValidationError('URL 1 is not a valid URL')
+      setUrl1Error('Please enter a valid URL starting with http:// or https://')
+      return
+    }
+
+    if (!isValidUrlPattern(url2)) {
+      setValidationError('URL 2 is not a valid URL')
+      setUrl2Error('Please enter a valid URL starting with http:// or https://')
+      return
+    }
+
+    // Additional validation using URL constructor
     try {
       new URL(url1.trim())
     } catch {
       setValidationError('URL 1 is not a valid URL')
+      setUrl1Error('Invalid URL format')
       return
     }
 
@@ -37,6 +78,7 @@ export default function UrlInputForm({
       new URL(url2.trim())
     } catch {
       setValidationError('URL 2 is not a valid URL')
+      setUrl2Error('Invalid URL format')
       return
     }
 
@@ -46,7 +88,7 @@ export default function UrlInputForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-lg shadow-md p-6 space-y-4"
+      className="bg-white rounded-xl shadow-lg p-6 space-y-5"
     >
       <div className="space-y-2">
         <label
@@ -62,12 +104,21 @@ export default function UrlInputForm({
           onChange={(e) => {
             setUrl1(e.target.value)
             setValidationError(null)
+            validateUrl1(e.target.value)
           }}
+          onBlur={(e) => validateUrl1(e.target.value)}
           placeholder="https://example.com/product-1"
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
+            url1Error
+              ? 'border-red-300 focus:ring-red-500'
+              : 'border-gray-300'
+          }`}
           required
           disabled={isLoading}
         />
+        {url1Error && (
+          <p className="text-xs text-red-600 mt-1">{url1Error}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -84,24 +135,33 @@ export default function UrlInputForm({
           onChange={(e) => {
             setUrl2(e.target.value)
             setValidationError(null)
+            validateUrl2(e.target.value)
           }}
+          onBlur={(e) => validateUrl2(e.target.value)}
           placeholder="https://example.com/product-2"
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed ${
+            url2Error
+              ? 'border-red-300 focus:ring-red-500'
+              : 'border-gray-300'
+          }`}
           required
           disabled={isLoading}
         />
+        {url2Error && (
+          <p className="text-xs text-red-600 mt-1">{url2Error}</p>
+        )}
       </div>
 
       {validationError && (
-        <div className="text-sm text-red-600 bg-red-50 p-2 rounded-md">
+        <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
           {validationError}
         </div>
       )}
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md font-medium hover:bg-indigo-700 transition-colors duration-200 shadow-sm hover:shadow-md disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:hover:bg-indigo-400"
+        disabled={isLoading || !!url1Error || !!url2Error}
+        className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:bg-indigo-400 disabled:cursor-not-allowed disabled:hover:bg-indigo-400 disabled:hover:shadow-md"
       >
         {isLoading ? (
           <span className="flex items-center justify-center">

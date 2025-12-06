@@ -39,19 +39,31 @@ export default function Home() {
         body: JSON.stringify({ url1, url2 }),
       })
 
-      const data = await response.json()
-
+      // Handle non-200 responses
       if (!response.ok) {
-        // Handle error response
-        setError(data.error || 'Failed to compare prices')
+        try {
+          const errorData = await response.json()
+          setError(errorData.error || 'Failed to compare prices')
+        } catch {
+          // If JSON parsing fails, use a generic error message
+          setError('Something went wrong while contacting the comparison service.')
+        }
         setResult(null)
-      } else {
-        // Success response
+        return
+      }
+
+      // Parse successful response
+      try {
+        const data = await response.json()
         setResult(data)
         setError(null)
+      } catch (parseError) {
+        setError('Something went wrong while processing the comparison results.')
+        setResult(null)
       }
     } catch (err) {
-      setError('Network error. Please try again.')
+      // Network errors or unexpected exceptions
+      setError('Something went wrong while contacting the comparison service.')
       setResult(null)
     } finally {
       setIsLoading(false)
@@ -59,14 +71,19 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl space-y-8">
-        <div className="text-center space-y-2">
+    <main className="min-h-screen flex items-center justify-center p-4 py-8">
+      <div className="w-full max-w-3xl space-y-6">
+        {/* Header Card */}
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center space-y-3">
           <h1 className="text-4xl font-bold text-gray-900">
             Price Comparison Bot
           </h1>
           <p className="text-lg text-gray-600">
             Paste two product URLs and compare their prices.
+          </p>
+          <p className="text-sm text-amber-600 flex items-center justify-center gap-1">
+            <span>⚠️</span>
+            <span>This is a demo. Real websites may block price scraping.</span>
           </p>
         </div>
 
