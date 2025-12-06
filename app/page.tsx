@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import UrlInputForm from '@/components/UrlInputForm'
 import ComparisonResult from '@/components/ComparisonResult'
+import ComparisonHistory from '@/components/ComparisonHistory'
 
 // Type matching the API response
 export type ComparisonResult = {
@@ -18,6 +19,7 @@ export default function Home() {
   const [result, setResult] = useState<ComparisonResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [history, setHistory] = useState<ComparisonResult[]>([])
 
   const handleCompare = async ({
     url1,
@@ -57,6 +59,11 @@ export default function Home() {
         const data = await response.json()
         setResult(data)
         setError(null)
+        
+        // Add to history if at least one price was found
+        if (data.price1 !== null || data.price2 !== null) {
+          setHistory((prev) => [data, ...prev])
+        }
       } catch (parseError) {
         setError('Something went wrong while processing the comparison results.')
         setResult(null)
@@ -90,6 +97,13 @@ export default function Home() {
         <UrlInputForm onSubmit={handleCompare} isLoading={isLoading} />
 
         <ComparisonResult result={result} isLoading={isLoading} error={error} />
+
+        {history.length > 0 && <ComparisonHistory history={history} />}
+
+        {/* Footer */}
+        <footer className="text-center text-sm text-gray-500 pt-4">
+          <p>Built as part of a 100-day Cursor Speedrun.</p>
+        </footer>
       </div>
     </main>
   )

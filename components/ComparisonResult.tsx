@@ -1,7 +1,12 @@
 'use client'
 
 import { ComparisonResult } from '@/app/page'
-import { formatPrice, formatPriceDifference, getDomain } from '@/lib/utils'
+import {
+  formatPrice,
+  formatPriceDifference,
+  getDomain,
+  comparePrices,
+} from '@/lib/utils'
 
 type ComparisonResultProps = {
   result: ComparisonResult | null
@@ -113,21 +118,15 @@ export default function ComparisonResult({
     )
   }
 
-  // Determine which price is cheaper
-  const price1Valid = result.price1 !== null
-  const price2Valid = result.price2 !== null
-  const isPrice1Cheaper =
-    price1Valid &&
-    price2Valid &&
-    result.price1! < result.price2!
-  const isPrice2Cheaper =
-    price2Valid &&
-    price1Valid &&
-    result.price2! < result.price1!
-  const pricesEqual =
-    price1Valid &&
-    price2Valid &&
-    result.price1! === result.price2!
+  // Determine which price is cheaper using helper function
+  const comparison = comparePrices(result.price1, result.price2)
+  const {
+    price1Valid,
+    price2Valid,
+    isPrice1Cheaper,
+    isPrice2Cheaper,
+    pricesEqual,
+  } = comparison
 
   return (
     <div className="space-y-5">

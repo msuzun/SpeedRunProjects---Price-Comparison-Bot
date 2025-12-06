@@ -65,3 +65,23 @@ export function getDomain(url: string): string {
   }
 }
 
+/**
+ * Determines which price is cheaper between two prices
+ * @param price1 - First price (can be null)
+ * @param price2 - Second price (can be null)
+ * @returns Object with comparison results
+ */
+export function comparePrices(price1: number | null, price2: number | null) {
+  const price1Valid = price1 !== null
+  const price2Valid = price2 !== null
+  
+  return {
+    price1Valid,
+    price2Valid,
+    isPrice1Cheaper: price1Valid && price2Valid && price1 < price2,
+    isPrice2Cheaper: price2Valid && price1Valid && price2 < price1,
+    pricesEqual: price1Valid && price2Valid && price1 === price2,
+    bothValid: price1Valid && price2Valid,
+  }
+}
+
