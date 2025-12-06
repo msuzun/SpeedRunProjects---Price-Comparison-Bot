@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ComparisonResult } from '@/lib/types'
 import {
   formatPrice,
@@ -19,6 +20,7 @@ export default function ComparisonResult({
   isLoading,
   error,
 }: ComparisonResultProps) {
+  const [copySuccess, setCopySuccess] = useState(false)
   // Loading state
   if (isLoading) {
     return (
@@ -134,6 +136,45 @@ export default function ComparisonResult({
     result.currency1 &&
     result.currency2 &&
     result.currency1 === result.currency2
+
+  // Generate shareable summary text
+  const generateSummary = (): string => {
+    if (!result) return ''
+
+    const domain1 = extractDomain(result.url1)
+    const domain2 = extractDomain(result.url2)
+    const title1 = result.title1 || domain1
+    const title2 = result.title2 || domain2
+
+    if (comparison.bothValid && currenciesMatch) {
+      if (comparison.pricesEqual) {
+        return `Price Comparison: ${title1} vs ${title2} → Same price: ${formatPrice(result.price1, result.currency1)}`
+      } else if (comparison.isPrice1Cheaper) {
+        const savings = result.price2! - result.price1!
+        return `Price Comparison: ${title1} vs ${title2} → Cheaper: ${domain1} by ${formatPriceDifference(savings, result.currency1)}`
+      } else {
+        const savings = result.price1! - result.price2!
+        return `Price Comparison: ${title1} vs ${title2} → Cheaper: ${domain2} by ${formatPriceDifference(savings, result.currency2)}`
+      }
+    } else if (comparison.price1Valid && !comparison.price2Valid) {
+      return `Price Comparison: ${title1} vs ${title2} → Only ${domain1} price found: ${formatPrice(result.price1, result.currency1)}`
+    } else if (comparison.price2Valid && !comparison.price1Valid) {
+      return `Price Comparison: ${title1} vs ${title2} → Only ${domain2} price found: ${formatPrice(result.price2, result.currency2)}`
+    } else {
+      return `Price Comparison: ${title1} vs ${title2} → Prices not available`
+    }
+  }
+
+  const handleCopySummary = async () => {
+    const summary = generateSummary()
+    try {
+      await navigator.clipboard.writeText(summary)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -287,6 +328,31 @@ export default function ComparisonResult({
           </div>
         </div>
       </div>
+
+      {/* Copy Summary Button */}
+      {result && (
+        <div className="flex justify-center">
+          <button
+            onClick={handleCopySummary}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            {copySuccess ? 'Copied! ✅' : 'Copy Summary'}
+          </button>
+        </div>
+      )}
 
       {/* Summary */}
       {bothValid && (

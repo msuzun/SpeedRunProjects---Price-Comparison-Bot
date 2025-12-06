@@ -115,3 +115,37 @@ export function comparePrices(price1: number | null, price2: number | null) {
   }
 }
 
+/**
+ * Formats a timestamp to a relative time string (e.g., "2 hours ago", "Yesterday")
+ * @param timestamp - Unix timestamp in milliseconds
+ * @returns Formatted time string
+ */
+export function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (seconds < 60) {
+    return 'Just now'
+  } else if (minutes < 60) {
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
+  } else if (hours < 24) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  } else if (days === 1) {
+    return 'Yesterday'
+  } else if (days < 7) {
+    return `${days} days ago`
+  } else {
+    // For older dates, show actual date
+    const date = new Date(timestamp)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    })
+  }
+}
+

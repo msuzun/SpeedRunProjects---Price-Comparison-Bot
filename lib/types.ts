@@ -16,5 +16,6 @@ export type ComparisonResult = {
   sourceHint2?: string | null
   error1?: string
   error2?: string
+  timestamp?: number // Unix timestamp in milliseconds
 }
 

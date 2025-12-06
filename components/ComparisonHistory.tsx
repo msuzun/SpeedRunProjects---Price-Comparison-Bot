@@ -1,7 +1,12 @@
 'use client'
 
 import { ComparisonResult } from '@/lib/types'
-import { formatPrice, extractDomain, comparePrices } from '@/lib/utils'
+import {
+  formatPrice,
+  extractDomain,
+  comparePrices,
+  formatRelativeTime,
+} from '@/lib/utils'
 
 type ComparisonHistoryProps = {
   history: ComparisonResult[]
@@ -78,14 +83,17 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                 </div>
               </div>
 
-              {/* Comparison note */}
-              {comparison.bothValid && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
+              {/* Comparison note and timestamp */}
+              <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                {comparison.bothValid && (
                   <p className="text-xs text-gray-600">
                     {comparison.pricesEqual ? (
                       <span>Both products have the same price</span>
                     ) : comparison.isPrice1Cheaper ? (
                       <span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-1">
+                          Winner
+                        </span>
                         <span className="font-medium text-green-600">
                           Product 1
                         </span>{' '}
@@ -93,6 +101,9 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                       </span>
                     ) : (
                       <span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-1">
+                          Winner
+                        </span>
                         <span className="font-medium text-green-600">
                           Product 2
                         </span>{' '}
@@ -100,8 +111,13 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                       </span>
                     )}
                   </p>
-                </div>
-              )}
+                )}
+                {item.timestamp && (
+                  <p className="text-xs text-gray-400">
+                    {formatRelativeTime(item.timestamp)}
+                  </p>
+                )}
+              </div>
             </div>
           )
         })}

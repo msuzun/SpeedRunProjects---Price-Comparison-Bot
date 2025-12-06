@@ -1,19 +1,34 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { isValidUrlPattern } from '@/lib/utils'
 
 type UrlInputFormProps = {
   onSubmit: (urls: { url1: string; url2: string }) => void
   isLoading: boolean
+  presetUrls?: { url1: string; url2: string } | null
+  onPresetApplied?: () => void
 }
 
 export default function UrlInputForm({
   onSubmit,
   isLoading,
+  presetUrls,
+  onPresetApplied,
 }: UrlInputFormProps) {
   const [url1, setUrl1] = useState('')
   const [url2, setUrl2] = useState('')
+
+  // Apply preset URLs when they change
+  useEffect(() => {
+    if (presetUrls) {
+      setUrl1(presetUrls.url1)
+      setUrl2(presetUrls.url2)
+      if (onPresetApplied) {
+        onPresetApplied()
+      }
+    }
+  }, [presetUrls, onPresetApplied])
   const [validationError, setValidationError] = useState<string | null>(null)
   const [url1Error, setUrl1Error] = useState<string | null>(null)
   const [url2Error, setUrl2Error] = useState<string | null>(null)
