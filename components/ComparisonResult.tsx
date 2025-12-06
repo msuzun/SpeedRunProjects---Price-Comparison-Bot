@@ -8,7 +8,7 @@ import {
   extractDomain,
   comparePrices,
 } from '@/lib/utils'
-import { getPriceHistory } from '@/lib/history/clientHistory'
+import { getPriceHistory, clearPriceHistory } from '@/lib/history/clientHistory'
 import PriceHistoryChart from '@/components/PriceHistoryChart'
 
 type ComparisonResultProps = {
@@ -23,17 +23,35 @@ export default function ComparisonResult({
   error,
 }: ComparisonResultProps) {
   const [copySuccess, setCopySuccess] = useState(false)
+  const [historyCleared1, setHistoryCleared1] = useState(false)
+  const [historyCleared2, setHistoryCleared2] = useState(false)
 
   // Get price history for both products
   const history1 = useMemo(() => {
-    if (!result) return []
+    if (!result || historyCleared1) return []
     return getPriceHistory(result.url1)
-  }, [result?.url1])
+  }, [result?.url1, historyCleared1])
 
   const history2 = useMemo(() => {
-    if (!result) return []
+    if (!result || historyCleared2) return []
     return getPriceHistory(result.url2)
-  }, [result?.url2])
+  }, [result?.url2, historyCleared2])
+
+  const handleClearHistory1 = () => {
+    if (!result) return
+    if (confirm('Are you sure you want to clear the price history for Product 1?')) {
+      clearPriceHistory(result.url1)
+      setHistoryCleared1(true)
+    }
+  }
+
+  const handleClearHistory2 = () => {
+    if (!result) return
+    if (confirm('Are you sure you want to clear the price history for Product 2?')) {
+      clearPriceHistory(result.url2)
+      setHistoryCleared2(true)
+    }
+  }
 
   // Loading state
   if (isLoading) {
@@ -310,7 +328,19 @@ export default function ComparisonResult({
               )}
 
               {/* Price History Chart */}
-              <PriceHistoryChart url={result.url1} history={history1} />
+              {history1.length >= 2 && (
+                <div>
+                  <PriceHistoryChart url={result.url1} history={history1} />
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={handleClearHistory1}
+                      className="text-xs text-red-600 hover:text-red-700 underline"
+                    >
+                      Reset History
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Error Messages */}
               {result.error1 && (
@@ -439,7 +469,19 @@ export default function ComparisonResult({
               )}
 
               {/* Price History Chart */}
-              <PriceHistoryChart url={result.url2} history={history2} />
+              {history2.length >= 2 && (
+                <div>
+                  <PriceHistoryChart url={result.url2} history={history2} />
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={handleClearHistory2}
+                      className="text-xs text-red-600 hover:text-red-700 underline"
+                    >
+                      Reset History
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Error Messages */}
               {result.error2 && (
