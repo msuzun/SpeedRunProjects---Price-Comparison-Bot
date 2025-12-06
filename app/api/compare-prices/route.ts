@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchPageHtml } from '@/lib/fetchPageHtml'
-import { extractPriceFromHtml } from '@/lib/priceExtractor'
+import { extractPriceFromHtml, PriceExtractionResult } from '@/lib/priceExtractor'
 
 /**
  * API Route: POST /api/compare-prices
@@ -57,6 +57,12 @@ export async function POST(request: NextRequest) {
       url2: string
       price1: number | null
       price2: number | null
+      currency1?: string | null
+      currency2?: string | null
+      rawPriceText1?: string | null
+      rawPriceText2?: string | null
+      sourceHint1?: string | null
+      sourceHint2?: string | null
       error1?: string
       error2?: string
     } = {
@@ -68,9 +74,14 @@ export async function POST(request: NextRequest) {
 
     // Handle result1
     if (result1.status === 'fulfilled') {
-      response.price1 = result1.value.price
-      if (result1.value.error) {
-        response.error1 = result1.value.error
+      const extraction = result1.value
+      response.price1 = extraction.price
+      response.currency1 = extraction.currency || null
+      response.rawPriceText1 = extraction.rawText || null
+      response.sourceHint1 = extraction.sourceHint || null
+
+      if (extraction.price === null) {
+        response.error1 = 'Could not extract price from page'
       }
     } else {
       response.error1 = result1.reason?.message || 'Failed to fetch or parse URL 1'
@@ -78,9 +89,14 @@ export async function POST(request: NextRequest) {
 
     // Handle result2
     if (result2.status === 'fulfilled') {
-      response.price2 = result2.value.price
-      if (result2.value.error) {
-        response.error2 = result2.value.error
+      const extraction = result2.value
+      response.price2 = extraction.price
+      response.currency2 = extraction.currency || null
+      response.rawPriceText2 = extraction.rawText || null
+      response.sourceHint2 = extraction.sourceHint || null
+
+      if (extraction.price === null) {
+        response.error2 = 'Could not extract price from page'
       }
     } else {
       response.error2 = result2.reason?.message || 'Failed to fetch or parse URL 2'
@@ -119,29 +135,21 @@ export async function POST(request: NextRequest) {
  * Helper function to fetch HTML and extract price from a URL.
  * 
  * @param url - The URL to fetch and parse
- * @returns Promise with price and optional error message
+ * @returns Promise with PriceExtractionResult
  */
 async function fetchAndExtractPrice(
   url: string
-): Promise<{ price: number | null; error?: string }> {
+): Promise<PriceExtractionResult> {
   try {
     // Fetch the HTML
     const html = await fetchPageHtml(url)
 
-    // Extract the price
-    const price = extractPriceFromHtml(html)
+    // Extract the price using domain-aware extractor
+    const result = extractPriceFromHtml(html, url)
 
-    if (price === null) {
-      return {
-        price: null,
-        error: 'Could not extract price from page',
-      }
-    }
-
-    return { price }
+    return result
   } catch (error) {
     // Re-throw to be caught by Promise.allSettled
     throw error
   }
 }
-
