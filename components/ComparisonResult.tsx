@@ -21,6 +21,7 @@ export default function ComparisonResult({
   error,
 }: ComparisonResultProps) {
   const [copySuccess, setCopySuccess] = useState(false)
+
   // Loading state
   if (isLoading) {
     return (
@@ -185,29 +186,64 @@ export default function ComparisonResult({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Product 1 Card */}
           <div
-            className={`rounded-xl shadow-md p-6 transition-all border-2 ${
+            className={`rounded-xl shadow-md p-6 transition-all border-2 hover:shadow-lg ${
               isPrice1Cheaper && price1Valid && bothValid
                 ? 'bg-green-50 border-green-300'
-                : 'bg-white border-gray-200'
+                : 'bg-white border-gray-200 hover:border-indigo-300'
             }`}
           >
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
-                  Product 1
-                </p>
-                <p className="text-xs text-gray-400 mb-2">
-                  {extractDomain(result.url1)}
-                </p>
-                {result.title1 ? (
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                    {result.title1}
-                  </p>
+            <div className="space-y-4">
+              {/* Image and Title Section */}
+              <div className="flex gap-4">
+                {result.image1 ? (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={result.image1}
+                      alt={result.title1 || 'Product 1'}
+                      className="w-20 h-20 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                      onError={(e) => {
+                        // Hide image on error
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No title available</p>
+                  <div className="w-20 h-20 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
                 )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
+                    Product 1
+                  </p>
+                  {result.title1 ? (
+                    <p className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                      {result.title1}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic mb-1">No title available</p>
+                  )}
+                  {result.brand1 && (
+                    <p className="text-xs text-gray-600 mb-1">Brand: {result.brand1}</p>
+                  )}
+                  <p className="text-xs text-gray-400">{extractDomain(result.url1)}</p>
+                </div>
               </div>
-              <div>
+
+              {/* Price Section */}
+              <div className="pt-2 border-t border-gray-100">
                 {result.price1 !== null ? (
                   <>
                     <p
@@ -242,6 +278,25 @@ export default function ComparisonResult({
                   </p>
                 )}
               </div>
+
+              {/* Category (if available) */}
+              {result.category1 && result.category1.length > 0 && (
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1">Category:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {result.category1.map((cat, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Error Messages */}
               {result.error1 && (
                 <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg">
                   {result.error1}
@@ -257,29 +312,64 @@ export default function ComparisonResult({
 
           {/* Product 2 Card */}
           <div
-            className={`rounded-xl shadow-md p-6 transition-all border-2 ${
+            className={`rounded-xl shadow-md p-6 transition-all border-2 hover:shadow-lg ${
               isPrice2Cheaper && price2Valid && bothValid
                 ? 'bg-green-50 border-green-300'
-                : 'bg-white border-gray-200'
+                : 'bg-white border-gray-200 hover:border-indigo-300'
             }`}
           >
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
-                  Product 2
-                </p>
-                <p className="text-xs text-gray-400 mb-2">
-                  {extractDomain(result.url2)}
-                </p>
-                {result.title2 ? (
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                    {result.title2}
-                  </p>
+            <div className="space-y-4">
+              {/* Image and Title Section */}
+              <div className="flex gap-4">
+                {result.image2 ? (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={result.image2}
+                      alt={result.title2 || 'Product 2'}
+                      className="w-20 h-20 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                      onError={(e) => {
+                        // Hide image on error
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">No title available</p>
+                  <div className="w-20 h-20 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
                 )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
+                    Product 2
+                  </p>
+                  {result.title2 ? (
+                    <p className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                      {result.title2}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic mb-1">No title available</p>
+                  )}
+                  {result.brand2 && (
+                    <p className="text-xs text-gray-600 mb-1">Brand: {result.brand2}</p>
+                  )}
+                  <p className="text-xs text-gray-400">{extractDomain(result.url2)}</p>
+                </div>
               </div>
-              <div>
+
+              {/* Price Section */}
+              <div className="pt-2 border-t border-gray-100">
                 {result.price2 !== null ? (
                   <>
                     <p
@@ -314,6 +404,25 @@ export default function ComparisonResult({
                   </p>
                 )}
               </div>
+
+              {/* Category (if available) */}
+              {result.category2 && result.category2.length > 0 && (
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1">Category:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {result.category2.map((cat, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Error Messages */}
               {result.error2 && (
                 <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg">
                   {result.error2}
