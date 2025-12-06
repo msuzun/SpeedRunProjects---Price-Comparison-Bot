@@ -6,6 +6,7 @@ import ComparisonResult from '@/components/ComparisonResult'
 import ComparisonHistory from '@/components/ComparisonHistory'
 import QuickPresets from '@/components/QuickPresets'
 import { ComparisonResult as ComparisonResultType } from '@/lib/types'
+import { addPriceHistory } from '@/lib/history/clientHistory'
 
 const HISTORY_STORAGE_KEY = 'price-compare-history'
 const MAX_HISTORY_ITEMS = 10
@@ -80,16 +81,37 @@ export default function Home() {
         setResult(data)
         setError(null)
         
-        // Add to history if at least one price was found
+        const now = Date.now()
+        
+        // Add to comparison history if at least one price was found
         if (data.price1 !== null || data.price2 !== null) {
           const historyItem: ComparisonResultType = {
             ...data,
-            timestamp: Date.now(),
+            timestamp: now,
           }
           setHistory((prev) => {
             const updated = [historyItem, ...prev]
             // Keep only the last MAX_HISTORY_ITEMS
             return updated.slice(0, MAX_HISTORY_ITEMS)
+          })
+        }
+        
+        // Add to price history tracking for each URL
+        if (data.price1 !== null) {
+          addPriceHistory(data.url1, {
+            url: data.url1,
+            timestamp: now,
+            price: data.price1,
+            currency: data.currency1 || null,
+          })
+        }
+        
+        if (data.price2 !== null) {
+          addPriceHistory(data.url2, {
+            url: data.url2,
+            timestamp: now,
+            price: data.price2,
+            currency: data.currency2 || null,
           })
         }
       } catch (parseError) {
