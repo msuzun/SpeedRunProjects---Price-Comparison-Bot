@@ -117,7 +117,7 @@ export default function Home() {
             Paste two product URLs and compare their prices.
           </p>
           <p className="text-sm text-gray-500">
-            Built as part of a 100-day Cursor Speedrun.
+            Built as part of a 100-day Speedrun.
           </p>
           <p className="text-sm text-amber-600 flex items-center justify-center gap-1">
             <span>⚠️</span>

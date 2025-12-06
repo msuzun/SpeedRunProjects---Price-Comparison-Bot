@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchPageHtml } from '@/lib/fetchPageHtml'
 import { extractPriceFromHtml, PriceExtractionResult } from '@/lib/priceExtractor'
-import { extractTitleFromHtml } from '@/lib/metadataExtractor'
+import { extractProductMetadata } from '@/lib/productExtractor'
 import { ComparisonResult } from '@/lib/types'
 
 /**
@@ -67,6 +67,9 @@ export async function POST(request: NextRequest) {
       response.price1 = extraction.price
       response.currency1 = extraction.currency || null
       response.title1 = extraction.title || null
+      response.image1 = extraction.image || null
+      response.brand1 = extraction.brand || null
+      response.category1 = extraction.category || null
       response.rawPriceText1 = extraction.rawText || null
       response.sourceHint1 = extraction.sourceHint || null
 
@@ -83,6 +86,9 @@ export async function POST(request: NextRequest) {
       response.price2 = extraction.price
       response.currency2 = extraction.currency || null
       response.title2 = extraction.title || null
+      response.image2 = extraction.image || null
+      response.brand2 = extraction.brand || null
+      response.category2 = extraction.category || null
       response.rawPriceText2 = extraction.rawText || null
       response.sourceHint2 = extraction.sourceHint || null
 
@@ -126,11 +132,18 @@ export async function POST(request: NextRequest) {
  * Helper function to fetch HTML and extract price and metadata from a URL.
  * 
  * @param url - The URL to fetch and parse
- * @returns Promise with PriceExtractionResult and title
+ * @returns Promise with PriceExtractionResult and product metadata
  */
 async function fetchAndExtractPrice(
   url: string
-): Promise<PriceExtractionResult & { title: string | null }> {
+): Promise<
+  PriceExtractionResult & {
+    title: string | null
+    image: string | null
+    brand: string | null
+    category: string[] | null
+  }
+> {
   try {
     // Fetch the HTML
     const html = await fetchPageHtml(url)
@@ -138,12 +151,15 @@ async function fetchAndExtractPrice(
     // Extract the price using domain-aware extractor
     const priceResult = extractPriceFromHtml(html, url)
 
-    // Extract the title
-    const title = extractTitleFromHtml(html)
+    // Extract product metadata
+    const metadata = extractProductMetadata(html, url)
 
     return {
       ...priceResult,
-      title,
+      title: metadata.title,
+      image: metadata.image,
+      brand: metadata.brand,
+      category: metadata.category,
     }
   } catch (error) {
     // Re-throw to be caught by Promise.allSettled

@@ -10,6 +10,12 @@ export type ComparisonResult = {
   currency2?: string | null
   title1?: string | null
   title2?: string | null
+  image1?: string | null
+  image2?: string | null
+  brand1?: string | null
+  brand2?: string | null
+  category1?: string[] | null
+  category2?: string[] | null
   rawPriceText1?: string | null
   rawPriceText2?: string | null
   sourceHint1?: string | null
