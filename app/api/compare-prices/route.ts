@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchPageHtml } from '@/lib/fetchPageHtml'
 import { extractPriceFromHtml, PriceExtractionResult } from '@/lib/priceExtractor'
+import { extractTitleFromHtml } from '@/lib/metadataExtractor'
+import { ComparisonResult } from '@/lib/types'
 
 /**
  * API Route: POST /api/compare-prices
@@ -52,20 +54,7 @@ export async function POST(request: NextRequest) {
     ])
 
     // Process results
-    const response: {
-      url1: string
-      url2: string
-      price1: number | null
-      price2: number | null
-      currency1?: string | null
-      currency2?: string | null
-      rawPriceText1?: string | null
-      rawPriceText2?: string | null
-      sourceHint1?: string | null
-      sourceHint2?: string | null
-      error1?: string
-      error2?: string
-    } = {
+    const response: ComparisonResult = {
       url1,
       url2,
       price1: null,
@@ -77,6 +66,7 @@ export async function POST(request: NextRequest) {
       const extraction = result1.value
       response.price1 = extraction.price
       response.currency1 = extraction.currency || null
+      response.title1 = extraction.title || null
       response.rawPriceText1 = extraction.rawText || null
       response.sourceHint1 = extraction.sourceHint || null
 
@@ -92,6 +82,7 @@ export async function POST(request: NextRequest) {
       const extraction = result2.value
       response.price2 = extraction.price
       response.currency2 = extraction.currency || null
+      response.title2 = extraction.title || null
       response.rawPriceText2 = extraction.rawText || null
       response.sourceHint2 = extraction.sourceHint || null
 
@@ -132,22 +123,28 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Helper function to fetch HTML and extract price from a URL.
+ * Helper function to fetch HTML and extract price and metadata from a URL.
  * 
  * @param url - The URL to fetch and parse
- * @returns Promise with PriceExtractionResult
+ * @returns Promise with PriceExtractionResult and title
  */
 async function fetchAndExtractPrice(
   url: string
-): Promise<PriceExtractionResult> {
+): Promise<PriceExtractionResult & { title: string | null }> {
   try {
     // Fetch the HTML
     const html = await fetchPageHtml(url)
 
     // Extract the price using domain-aware extractor
-    const result = extractPriceFromHtml(html, url)
+    const priceResult = extractPriceFromHtml(html, url)
 
-    return result
+    // Extract the title
+    const title = extractTitleFromHtml(html)
+
+    return {
+      ...priceResult,
+      title,
+    }
   } catch (error) {
     // Re-throw to be caught by Promise.allSettled
     throw error

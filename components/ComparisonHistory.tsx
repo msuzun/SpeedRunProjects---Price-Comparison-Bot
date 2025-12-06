@@ -1,7 +1,7 @@
 'use client'
 
-import { ComparisonResult } from '@/app/page'
-import { formatPrice, getDomain, comparePrices } from '@/lib/utils'
+import { ComparisonResult } from '@/lib/types'
+import { formatPrice, extractDomain, comparePrices } from '@/lib/utils'
 
 type ComparisonHistoryProps = {
   history: ComparisonResult[]
@@ -40,7 +40,7 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Product 1</p>
                     <p className="text-gray-700 font-medium truncate">
-                      {getDomain(item.url1)}
+                      {extractDomain(item.url1)}
                     </p>
                   </div>
                   <div className="ml-3 text-right">
@@ -51,7 +51,7 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                           : 'text-gray-900'
                       }`}
                     >
-                      {formatPrice(item.price1)}
+                      {formatPrice(item.price1, item.currency1)}
                     </p>
                   </div>
                 </div>
@@ -61,7 +61,7 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Product 2</p>
                     <p className="text-gray-700 font-medium truncate">
-                      {getDomain(item.url2)}
+                      {extractDomain(item.url2)}
                     </p>
                   </div>
                   <div className="ml-3 text-right">
@@ -72,7 +72,7 @@ export default function ComparisonHistory({ history }: ComparisonHistoryProps) {
                           : 'text-gray-900'
                       }`}
                     >
-                      {formatPrice(item.price2)}
+                      {formatPrice(item.price2, item.currency2)}
                     </p>
                   </div>
                 </div>

@@ -4,22 +4,13 @@ import { useState } from 'react'
 import UrlInputForm from '@/components/UrlInputForm'
 import ComparisonResult from '@/components/ComparisonResult'
 import ComparisonHistory from '@/components/ComparisonHistory'
-
-// Type matching the API response
-export type ComparisonResult = {
-  url1: string
-  url2: string
-  price1: number | null
-  price2: number | null
-  error1?: string
-  error2?: string
-}
+import { ComparisonResult as ComparisonResultType } from '@/lib/types'
 
 export default function Home() {
-  const [result, setResult] = useState<ComparisonResult | null>(null)
+  const [result, setResult] = useState<ComparisonResultType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [history, setHistory] = useState<ComparisonResult[]>([])
+  const [history, setHistory] = useState<ComparisonResultType[]>([])
 
   const handleCompare = async ({
     url1,

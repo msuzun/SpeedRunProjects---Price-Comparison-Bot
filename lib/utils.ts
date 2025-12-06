@@ -1,18 +1,41 @@
 /**
  * Formats a price number to a currency string
- * @param price - The price to format
+ * @param value - The price to format (can be null)
  * @param currency - Currency code (default: 'USD')
- * @returns Formatted price string
+ * @returns Formatted price string or "—" if null
  */
-export function formatPrice(price: number | null, currency: string = 'USD'): string {
-  if (price === null) return 'Price not found'
+export function formatPrice(value: number | null, currency?: string | null): string {
+  if (value === null) return '—'
   
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price)
+  // Determine locale based on currency
+  let locale = 'en-US'
+  if (currency === 'TRY' || currency === 'TL') {
+    locale = 'tr-TR'
+  } else if (currency === 'EUR') {
+    locale = 'de-DE'
+  } else if (currency === 'GBP') {
+    locale = 'en-GB'
+  }
+
+  // Use provided currency or default to USD
+  const currencyCode = currency || 'USD'
+  
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  } catch (error) {
+    // Fallback if currency code is invalid
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
 }
 
 /**
@@ -21,13 +44,11 @@ export function formatPrice(price: number | null, currency: string = 'USD'): str
  * @param currency - Currency code (default: 'USD')
  * @returns Formatted difference string
  */
-export function formatPriceDifference(difference: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(difference)
+export function formatPriceDifference(
+  difference: number,
+  currency?: string | null
+): string {
+  return formatPrice(difference, currency || 'USD')
 }
 
 /**
@@ -57,6 +78,15 @@ export function isValidUrlPattern(url: string): boolean {
  * @returns The domain name or the original URL if parsing fails
  */
 export function getDomain(url: string): string {
+  return extractDomain(url)
+}
+
+/**
+ * Extracts the domain from a URL for display purposes
+ * @param url - The URL to extract domain from
+ * @returns The domain name or the original URL if parsing fails
+ */
+export function extractDomain(url: string): string {
   try {
     const urlObj = new URL(url)
     return urlObj.hostname.replace('www.', '')

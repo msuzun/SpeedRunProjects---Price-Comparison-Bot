@@ -1,10 +1,10 @@
 'use client'
 
-import { ComparisonResult } from '@/app/page'
+import { ComparisonResult } from '@/lib/types'
 import {
   formatPrice,
   formatPriceDifference,
-  getDomain,
+  extractDomain,
   comparePrices,
 } from '@/lib/utils'
 
@@ -126,7 +126,14 @@ export default function ComparisonResult({
     isPrice1Cheaper,
     isPrice2Cheaper,
     pricesEqual,
+    bothValid,
   } = comparison
+
+  // Check if currencies match
+  const currenciesMatch =
+    result.currency1 &&
+    result.currency2 &&
+    result.currency1 === result.currency2
 
   return (
     <div className="space-y-5">
@@ -138,31 +145,56 @@ export default function ComparisonResult({
           {/* Product 1 Card */}
           <div
             className={`rounded-xl shadow-md p-6 transition-all border-2 ${
-              isPrice1Cheaper && price1Valid
+              isPrice1Cheaper && price1Valid && bothValid
                 ? 'bg-green-50 border-green-300'
                 : 'bg-white border-gray-200'
             }`}
           >
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
                   Product 1
                 </p>
-                <p className="text-sm font-medium text-gray-700 break-all">
-                  {getDomain(result.url1)}
+                <p className="text-xs text-gray-400 mb-2">
+                  {extractDomain(result.url1)}
                 </p>
+                {result.title1 ? (
+                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                    {result.title1}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No title available</p>
+                )}
               </div>
               <div>
-                <p
-                  className={`text-3xl font-bold ${
-                    isPrice1Cheaper && price1Valid
-                      ? 'text-green-600'
-                      : 'text-gray-900'
-                  }`}
-                >
-                  {formatPrice(result.price1)}
-                </p>
-                {isPrice1Cheaper && price1Valid && (
+                {result.price1 !== null ? (
+                  <>
+                    <p
+                      className={`text-3xl font-bold ${
+                        isPrice1Cheaper && price1Valid && bothValid
+                          ? 'text-green-600'
+                          : 'text-gray-900'
+                      }`}
+                    >
+                      {formatPrice(result.price1, result.currency1)}
+                    </p>
+                    {result.currency1 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Currency: {result.currency1}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-2xl font-semibold text-gray-400">Price not found</p>
+                    {result.rawPriceText1 && (
+                      <p className="text-xs text-gray-400 mt-1 italic">
+                        Raw text: {result.rawPriceText1}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {isPrice1Cheaper && price1Valid && bothValid && (
                   <p className="text-sm text-green-600 font-semibold mt-2 flex items-center gap-1">
                     <span>✓</span>
                     <span>Cheaper option</span>
@@ -185,31 +217,56 @@ export default function ComparisonResult({
           {/* Product 2 Card */}
           <div
             className={`rounded-xl shadow-md p-6 transition-all border-2 ${
-              isPrice2Cheaper && price2Valid
+              isPrice2Cheaper && price2Valid && bothValid
                 ? 'bg-green-50 border-green-300'
                 : 'bg-white border-gray-200'
             }`}
           >
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">
                   Product 2
                 </p>
-                <p className="text-sm font-medium text-gray-700 break-all">
-                  {getDomain(result.url2)}
+                <p className="text-xs text-gray-400 mb-2">
+                  {extractDomain(result.url2)}
                 </p>
+                {result.title2 ? (
+                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                    {result.title2}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No title available</p>
+                )}
               </div>
               <div>
-                <p
-                  className={`text-3xl font-bold ${
-                    isPrice2Cheaper && price2Valid
-                      ? 'text-green-600'
-                      : 'text-gray-900'
-                  }`}
-                >
-                  {formatPrice(result.price2)}
-                </p>
-                {isPrice2Cheaper && price2Valid && (
+                {result.price2 !== null ? (
+                  <>
+                    <p
+                      className={`text-3xl font-bold ${
+                        isPrice2Cheaper && price2Valid && bothValid
+                          ? 'text-green-600'
+                          : 'text-gray-900'
+                      }`}
+                    >
+                      {formatPrice(result.price2, result.currency2)}
+                    </p>
+                    {result.currency2 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Currency: {result.currency2}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-2xl font-semibold text-gray-400">Price not found</p>
+                    {result.rawPriceText2 && (
+                      <p className="text-xs text-gray-400 mt-1 italic">
+                        Raw text: {result.rawPriceText2}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {isPrice2Cheaper && price2Valid && bothValid && (
                   <p className="text-sm text-green-600 font-semibold mt-2 flex items-center gap-1">
                     <span>✓</span>
                     <span>Cheaper option</span>
@@ -232,36 +289,52 @@ export default function ComparisonResult({
       </div>
 
       {/* Summary */}
-      {price1Valid && price2Valid && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl shadow-lg p-6 text-center">
-          {pricesEqual ? (
-            <p className="text-indigo-900 font-semibold text-lg">
-              Both products have the same price: {formatPrice(result.price1)}
-            </p>
-          ) : isPrice1Cheaper ? (
-            <div className="space-y-2">
+      {bothValid && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl shadow-lg p-6">
+          {!currenciesMatch ? (
+            <div className="text-center">
+              <p className="text-amber-800 font-semibold text-lg mb-2">
+                ⚠️ Currency Mismatch
+              </p>
+              <p className="text-amber-700">
+                Prices are in different currencies ({result.currency1 || 'Unknown'} vs{' '}
+                {result.currency2 || 'Unknown'}). Direct comparison may not be accurate.
+              </p>
+            </div>
+          ) : pricesEqual ? (
+            <div className="text-center">
               <p className="text-indigo-900 font-semibold text-lg">
-                Product 1 is the better deal!
+                Both products have the same price: {formatPrice(result.price1, result.currency1)}
+              </p>
+            </div>
+          ) : isPrice1Cheaper ? (
+            <div className="text-center space-y-2">
+              <p className="text-indigo-900 font-semibold text-lg">
+                Cheaper option: Product 1
               </p>
               <p className="text-indigo-700">
-                You save{' '}
+                You save:{' '}
                 <span className="font-bold text-xl">
-                  {formatPriceDifference(result.price2! - result.price1!)}
-                </span>{' '}
-                by choosing Product 1
+                  {formatPriceDifference(
+                    result.price2! - result.price1!,
+                    result.currency1
+                  )}
+                </span>
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="text-center space-y-2">
               <p className="text-indigo-900 font-semibold text-lg">
-                Product 2 is the better deal!
+                Cheaper option: Product 2
               </p>
               <p className="text-indigo-700">
-                You save{' '}
+                You save:{' '}
                 <span className="font-bold text-xl">
-                  {formatPriceDifference(result.price1! - result.price2!)}
-                </span>{' '}
-                by choosing Product 2
+                  {formatPriceDifference(
+                    result.price1! - result.price2!,
+                    result.currency2
+                  )}
+                </span>
               </p>
             </div>
           )}
