@@ -5,6 +5,7 @@ import UrlInputForm from '@/components/UrlInputForm'
 import ComparisonResult from '@/components/ComparisonResult'
 import ComparisonHistory from '@/components/ComparisonHistory'
 import QuickPresets from '@/components/QuickPresets'
+import AutoScanResultList from '@/components/AutoScanResultList'
 import { ComparisonResult as ComparisonResultType } from '@/lib/types'
 import { addPriceHistory } from '@/lib/history/clientHistory'
 
@@ -17,6 +18,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState<ComparisonResultType[]>([])
   const [presetUrls, setPresetUrls] = useState<{ url1: string; url2: string } | null>(null)
+  const [autoScanResults, setAutoScanResults] = useState<Array<{
+    store: string
+    url: string
+    price: number | null
+  }>>([])
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -80,6 +86,13 @@ export default function Home() {
         const data = await response.json()
         setResult(data)
         setError(null)
+        
+        // Store auto-scan results if available
+        if (data.autoScanResults && Array.isArray(data.autoScanResults)) {
+          setAutoScanResults(data.autoScanResults)
+        } else {
+          setAutoScanResults([])
+        }
         
         const now = Date.now()
         
@@ -157,6 +170,10 @@ export default function Home() {
         <QuickPresets onSelect={setPresetUrls} />
 
         <ComparisonResult result={result} isLoading={isLoading} error={error} />
+
+        {autoScanResults.length > 0 && (
+          <AutoScanResultList results={autoScanResults} />
+        )}
 
         {history.length > 0 && <ComparisonHistory history={history} />}
 
