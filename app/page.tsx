@@ -4,11 +4,58 @@ import { useState } from 'react'
 import UrlInputForm from '@/components/UrlInputForm'
 import ComparisonResult from '@/components/ComparisonResult'
 
-export default function Home() {
-  const [urls, setUrls] = useState<{ url1: string; url2: string } | null>(null)
+// Type matching the API response
+export type ComparisonResult = {
+  url1: string
+  url2: string
+  price1: number | null
+  price2: number | null
+  error1?: string
+  error2?: string
+}
 
-  const handleSubmit = (submittedUrls: { url1: string; url2: string }) => {
-    setUrls(submittedUrls)
+export default function Home() {
+  const [result, setResult] = useState<ComparisonResult | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleCompare = async ({
+    url1,
+    url2,
+  }: {
+    url1: string
+    url2: string
+  }) => {
+    setIsLoading(true)
+    setError(null)
+    setResult(null)
+
+    try {
+      const response = await fetch('/api/compare-prices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url1, url2 }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Handle error response
+        setError(data.error || 'Failed to compare prices')
+        setResult(null)
+      } else {
+        // Success response
+        setResult(data)
+        setError(null)
+      }
+    } catch (err) {
+      setError('Network error. Please try again.')
+      setResult(null)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -23,11 +70,10 @@ export default function Home() {
           </p>
         </div>
 
-        <UrlInputForm onSubmit={handleSubmit} />
+        <UrlInputForm onSubmit={handleCompare} isLoading={isLoading} />
 
-        <ComparisonResult />
+        <ComparisonResult result={result} isLoading={isLoading} error={error} />
       </div>
     </main>
   )
 }
-
