@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { ComparisonResult } from '@/lib/types'
+import { useState, useMemo } from 'react'
+import type { ComparisonResult } from '@/lib/types'
 import {
   formatPrice,
   formatPriceDifference,
   extractDomain,
   comparePrices,
 } from '@/lib/utils'
+import { getPriceHistory } from '@/lib/history/clientHistory'
+import PriceHistoryChart from '@/components/PriceHistoryChart'
 
 type ComparisonResultProps = {
   result: ComparisonResult | null
@@ -21,6 +23,17 @@ export default function ComparisonResult({
   error,
 }: ComparisonResultProps) {
   const [copySuccess, setCopySuccess] = useState(false)
+
+  // Get price history for both products
+  const history1 = useMemo(() => {
+    if (!result) return []
+    return getPriceHistory(result.url1)
+  }, [result?.url1])
+
+  const history2 = useMemo(() => {
+    if (!result) return []
+    return getPriceHistory(result.url2)
+  }, [result?.url2])
 
   // Loading state
   if (isLoading) {
@@ -296,6 +309,9 @@ export default function ComparisonResult({
                 </div>
               )}
 
+              {/* Price History Chart */}
+              <PriceHistoryChart url={result.url1} history={history1} />
+
               {/* Error Messages */}
               {result.error1 && (
                 <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg">
@@ -421,6 +437,9 @@ export default function ComparisonResult({
                   </div>
                 </div>
               )}
+
+              {/* Price History Chart */}
+              <PriceHistoryChart url={result.url2} history={history2} />
 
               {/* Error Messages */}
               {result.error2 && (
