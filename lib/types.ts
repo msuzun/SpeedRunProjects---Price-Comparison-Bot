@@ -23,5 +23,10 @@ export type ComparisonResult = {
   error1?: string
   error2?: string
   timestamp?: number // Unix timestamp in milliseconds
+  autoScanResults?: Array<{
+    store: string
+    url: string
+    price: number | null
+  }>
 }
 

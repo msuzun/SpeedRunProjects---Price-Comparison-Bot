@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { fetchPageHtml } from '@/lib/fetchPageHtml'
 import { extractPriceFromHtml, PriceExtractionResult } from '@/lib/priceExtractor'
 import { extractProductMetadata } from '@/lib/productExtractor'
+import { searchStoresForTitle } from '@/lib/searchEngines'
 import { ComparisonResult } from '@/lib/types'
 
 /**
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       url2,
       price1: null,
       price2: null,
+      autoScanResults: [],
     }
 
     // Handle result1
@@ -75,6 +77,19 @@ export async function POST(request: NextRequest) {
 
       if (extraction.price === null) {
         response.error1 = 'Could not extract price from page'
+      }
+
+      // Auto-scan other stores if we have a title
+      if (extraction.title) {
+        try {
+          const autoScanResults = await searchStoresForTitle(extraction.title)
+          response.autoScanResults = autoScanResults
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[API] Auto-scan error:', error)
+          }
+          // Don't fail the request if auto-scan fails
+        }
       }
     } else {
       response.error1 = result1.reason?.message || 'Failed to fetch or parse URL 1'
