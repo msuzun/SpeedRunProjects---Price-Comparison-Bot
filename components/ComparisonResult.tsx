@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
+import { toPng } from 'html-to-image'
 import type { ComparisonResult } from '@/lib/types'
 import {
   formatPrice,
@@ -25,6 +26,8 @@ export default function ComparisonResult({
   const [copySuccess, setCopySuccess] = useState(false)
   const [historyCleared1, setHistoryCleared1] = useState(false)
   const [historyCleared2, setHistoryCleared2] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const comparisonRef = useRef<HTMLDivElement>(null)
 
   // Get price history for both products
   const history1 = useMemo(() => {
@@ -50,6 +53,32 @@ export default function ComparisonResult({
     if (confirm('Are you sure you want to clear the price history for Product 2?')) {
       clearPriceHistory(result.url2)
       setHistoryCleared2(true)
+    }
+  }
+
+  const handleDownloadScreenshot = async () => {
+    if (!comparisonRef.current || !result) return
+
+    setIsDownloading(true)
+    try {
+      const dataUrl = await toPng(comparisonRef.current, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+      })
+
+      // Create download link
+      const link = document.createElement('a')
+      link.download = `price-comparison-${Date.now()}.png`
+      link.href = dataUrl
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error('Failed to generate screenshot:', error)
+      alert('Failed to generate screenshot. Please try again.')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -210,10 +239,67 @@ export default function ComparisonResult({
 
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-6">
-          Comparison Results
-        </h2>
+      <div className="bg-white rounded-xl shadow-lg p-6" ref={comparisonRef}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Comparison Results
+          </h2>
+          {result && (
+            <div className="relative group">
+              <button
+                onClick={handleDownloadScreenshot}
+                disabled={isDownloading}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {isDownloading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    <span>Download Screenshot</span>
+                  </>
+                )}
+              </button>
+              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                Save comparison for later
+              </div>
+            </div>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Product 1 Card */}
           <div
