@@ -2,6 +2,11 @@
  * Popup script for Price Compare Assistant
  */
 
+// Configuration - Update these with your deployment URL
+// For production, replace with your actual domain (e.g., 'https://your-domain.com')
+const API_BASE_URL = 'http://localhost:3000' // Change to your production URL
+const APP_BASE_URL = 'http://localhost:3000' // Change to your production URL
+
 let currentProduct = null
 
 // Listen for product detection from content script
@@ -112,8 +117,13 @@ async function handleCompare() {
     // Get current product URL or use the page URL
     const currentUrl = currentProduct.url || (await getCurrentTabUrl())
 
+    if (!currentUrl) {
+      throw new Error('Could not determine current page URL')
+    }
+
     // Call comparison API
-    const response = await fetch('http://localhost:3000/api/compare-prices', {
+    const apiUrl = `${API_BASE_URL}/api/compare-prices`
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +140,7 @@ async function handleCompare() {
     }
 
     const data = await response.json()
-    displayResults(data)
+    displayResults(data, currentUrl, compareUrl)
   } catch (error) {
     showError(error.message || 'Failed to compare prices. Make sure the Next.js server is running.')
   } finally {
@@ -153,40 +163,60 @@ async function getCurrentTabUrl() {
 /**
  * Display comparison results
  */
-function displayResults(data) {
+function displayResults(data, url1, url2) {
   const resultsDiv = document.getElementById('results')
   const contentDiv = document.getElementById('resultsContent')
   resultsDiv.classList.remove('hidden')
 
   contentDiv.innerHTML = ''
 
+  const prices = []
+  
   // Product 1
   if (data.price1 !== null) {
+    const isCheaper = data.price2 !== null && data.price1 < data.price2
     const item1 = createResultItem(
       data.title1 || 'Product 1',
       data.price1,
       data.currency1 || 'TRY',
       data.url1,
-      data.price2 !== null && data.price1 < data.price2
+      isCheaper
     )
     contentDiv.appendChild(item1)
+    prices.push({ price: data.price1, url: url1 })
   }
 
   // Product 2
   if (data.price2 !== null) {
+    const isCheaper = data.price1 !== null && data.price2 < data.price1
     const item2 = createResultItem(
       data.title2 || 'Product 2',
       data.price2,
       data.currency2 || 'TRY',
       data.url2,
-      data.price1 !== null && data.price2 < data.price1
+      isCheaper
     )
     contentDiv.appendChild(item2)
+    prices.push({ price: data.price2, url: url2 })
   }
 
   // Show message if no prices found
   if (data.price1 === null && data.price2 === null) {
     contentDiv.innerHTML = '<p style="color: #6b7280; font-size: 12px;">No prices found</p>'
+  } else {
+    // Add "Open full comparison" button
+    const buttonContainer = document.createElement('div')
+    buttonContainer.style.marginTop = '12px'
+    buttonContainer.style.paddingTop = '12px'
+    buttonContainer.style.borderTop = '1px solid #e5e7eb'
+    
+    const openButton = document.createElement('button')
+    openButton.className = 'button'
+    openButton.textContent = 'Open Full Comparison'
+    openButton.onclick = () => openFullComparison(url1, url2)
+    buttonContainer.appendChild(openButton)
+    
+    contentDiv.appendChild(buttonContainer)
   }
 }
 
@@ -264,5 +294,17 @@ function hideLoading() {
  */
 function hideResults() {
   document.getElementById('results').classList.add('hidden')
+}
+
+/**
+ * Open full comparison in Next.js app
+ */
+function openFullComparison(url1, url2) {
+  const params = new URLSearchParams({
+    url1: url1,
+    url2: url2,
+  })
+  const fullUrl = `${APP_BASE_URL}/?${params.toString()}`
+  chrome.tabs.create({ url: fullUrl })
 }
 

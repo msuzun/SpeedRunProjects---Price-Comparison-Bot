@@ -24,6 +24,22 @@ export default function Home() {
     price: number | null
   }>>([])
 
+  // Check for URL parameters on mount (for Chrome extension)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const url1 = params.get('url1')
+      const url2 = params.get('url2')
+      
+      if (url1 && url2) {
+        // Auto-trigger comparison with URLs from query params
+        handleCompare({ url1, url2 }).catch((err) => {
+          console.error('Auto-comparison failed:', err)
+        })
+      }
+    }
+  }, [])
+
   // Load history from localStorage on mount
   useEffect(() => {
     try {
